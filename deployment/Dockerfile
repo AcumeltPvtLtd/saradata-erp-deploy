@@ -1,7 +1,7 @@
-# Frappe Bench Production Dockerfile for Railway Deployment
-# Version: 2.0
-# Compatible with Railway PaaS platform
-# Optimized for Frappe 15.x + ERPNext 1.3 + Foundry ERP
+# Frappe Bench Production Dockerfile for Railway
+# Version: 3.0
+# RAILWAY-OPTIMIZED FOR FRAPPE B15 + ERPNext
+# Based on actual repository structure
 
 FROM python:3.12-slim
 
@@ -20,25 +20,58 @@ RUN apt-get update && apt-get install -y \
 # Set working directory
 WORKDIR /app
 
-# Copy requirements files
-COPY requirements.txt pyproject.toml setup.py setup.cfg ./
+# Copy Python dependencies from actual locations
+COPY apps/frappe/pyproject.toml apps/erpnext/pyproject.toml apps/foundry_erp/pyproject.toml ./
 
-# Install Python dependencies
+# Install Python dependencies (Frappe requires pyproject.toml, not requirements.txt)
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt && \
-    pip install --no-cache-dir -e .
+    pip install --no-cache-dir -e ./apps/frappe && \
+    pip install --no-cache-dir -e ./apps/erpnext && \
+    pip install --no-cache-dir -e ./apps/foundry_erp
 
-# Copy package files and install Node.js dependencies
-COPY package.json package-lock.json yarn.lock .npmrc ./
+# Copy Node.js dependencies from apps/frappe (Frappe's package.json)
+COPY apps/frappe/package.json apps/frappe/yarn.lock ./
+
+# Install Node.js dependencies
 RUN npm ci --production
 
 # Copy application source code (selective for size optimization)
-COPY apps/frappe/ apps/frappe/
-COPY apps/erpnext/ apps/erpnext/
-COPY apps/foundry_erp/ apps/foundry_erp/
+COPY apps/frappe/frappe/ apps/frappe/frappe/
+COPY apps/frappe/esbuild/ apps/frappe/esbuild/ 2>/dev/null || true
+COPY apps/erpnext/erpnext/ apps/erpnext/erpnext/
+COPY apps/foundry_erp/ apps/foundry_erp/ 2>/dev/null || true
 
-# Copy configuration files
-COPY config/ Procfile .gitignore README.md DEPLOYMENT_CHECKLIST.md cleanup.sh ./
+# Copy configuration files from config/
+COPY config/ ./config/
+
+# Copy critical files that exist in repository
+COPY apps/frappe/.coveragerc ./ 2>/dev/null || true
+COPY apps/frappe/.editorconfig ./ 2>/dev/null || true
+COPY apps/frappe/.eslintignore ./ 2>/dev/null || true
+COPY apps/frappe/.eslintrc ./ 2>/dev/null || true
+COPY apps/frappe/.greptile/ ./ 2>/dev/null || true
+COPY apps/frappe/.mergify.yml ./ 2>/dev/null || true
+COPY apps/frappe/.pre-commit-config.yaml ./ 2>/dev/null || true
+COPY apps/frappe/.releaserc ./ 2>/dev/null || true
+COPY apps/frappe/.semgrepignore ./ 2>/dev/null || true
+COPY apps/frappe/attributions.md ./ 2>/dev/null || true
+COPY apps/frappe/babel_extractors.csv ./ 2>/dev/null || true
+COPY apps/frappe/codecov.yml ./ 2>/dev/null || true
+COPY apps/frappe/CODEOWNERS ./ 2>/dev/null || true
+COPY apps/frappe/commitlint.config.js ./ 2>/dev/null || true
+COPY apps/frappe/crowdin.yml ./ 2>/dev/null || true
+COPY apps/frappe/cypress.config.js ./ 2>/dev/null || true
+COPY apps/frappe/generate_bootstrap_theme.js ./ 2>/dev/null || true
+COPY apps/frappe/hooks.md ./ 2>/dev/null || true
+COPY apps/frappe/LICENSE ./ 2>/dev/null || true
+COPY apps/frappe/node_utils.js ./ 2>/dev/null || true
+COPY apps/frappe/pyproject.toml ./ 2>/dev/null || true
+COPY apps/frappe/README.md ./ 2>/dev/null || true
+COPY apps/frappe/realtime/ ./ 2>/dev/null || true
+COPY apps/frappe/SECURITY.md ./ 2>/dev/null || true
+COPY apps/frappe/sider.yml ./ 2>/dev/null || true
+COPY apps/frappe/socketio.js ./ 2>/dev/null || true
+COPY apps/frappe/yarn.lock ./ 2>/dev/null || true
 
 # Create necessary directories
 RUN mkdir -p logs
@@ -53,7 +86,11 @@ ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH=/app
 ENV DJANGO_SETTINGS_MODULE=frappe.core.default_settings
 ENV PORT=8000
+ENV NODE_ENV=production
 
 EXPOSE 8000
+
+# Create Procfile for Honcho (process manager)
+RUN echo 'web: python -m frappe --host 0.0.0.0 --port $PORT\n' > Procfile
 
 CMD ["honcho", "start", "-f", "Procfile"]

@@ -16,4 +16,5 @@ fi
 
 # Start the application
 log "Starting Frappe server on port $PORT..."
+log "Procfile structure:" && cat Procfile
 exec honcho start -f Procfile
