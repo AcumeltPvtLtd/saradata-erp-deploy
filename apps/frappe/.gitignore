@@ -1,0 +1,6 @@
+# App .gitignore
+node_modules/
+.DS_Store
+*.log
+*.pyc
+__pycache__/

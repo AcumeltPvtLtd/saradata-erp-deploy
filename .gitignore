@@ -1,0 +1,104 @@
+# GitHub-ready .gitignore for Frappe/ERPNext
+
+# System files
+.DS_Store
+*.log
+*.pyc
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+
+# Environment and virtual environments
+.env
+env/
+venv/
+
+# Site files
+sites/assets/
+sites/*/private/
+sites/*/public/files/
+sites/*/private/files/
+sites/*/backups/
+sites/*/indexes/
+sites/*/locks/
+
+# Node.js/npm
+node_modules/
+package-lock.json
+npm-debug.log*
+
+# Python
+*.egg-info/
+*.pyc
+__pycache__/
+*.log
+
+# IDE and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Build and distribution artifacts
+build/
+dist/
+*.egg
+dist/
+*.so
+*.dylib
+
+# Temporary files
+*.tmp
+*.temp
+*_tmp
+*_temp
+
+# OS specific
+OS-specific*
+tmp_*
+*_V*
+*_S*
+
+# Configuration and cache
+config/pids/*
+config/*.rdb
+
+# Log files
+logs/
+database.log
+scheduler.log
+web.log
+worker.log
+
+# Site-specific
+customapps/
+*.user
+
+# Backup files
+*.sql.backup
+*.sql.dump
+
+# Test and coverage reports
+htmlcov/
+.coverage
+.pytest_cache/
+
+# Editor backup files
+*~
+
+# Project specific
+.DS_Store
+patches.txt
+check_mi_flow.py
+check_page.py
+FIX_GUIDE.md
+tmp_check.sql
+
+# Ignore all .pyc and __pycache__ directories recursively
+**/__pycache__/
+**/*.pyc
+
+# Ignore benchmark and profiling files
+benchmark*
+profiles/
+*profile*

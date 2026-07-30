@@ -1,0 +1,16 @@
+[project]
+name = "foundry_erp"
+authors = [
+    { name = "Your Company", email = "admin@yourcompany.com"}
+]
+description = "Foundry Production Management - Tool Master & Moulding Entry for ERPNext v15"
+requires-python = ">=3.10"
+readme = "README.md"
+dynamic = ["version"]
+dependencies = []
+
+[build-system]
+requires = ["flit_core >=3.4,<4"]
+build-backend = "flit_core.buildapi"
+
+[tool.bench.dev-dependencies]
