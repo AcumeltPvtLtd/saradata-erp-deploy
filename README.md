@@ -1,6 +1,6 @@
 # Frappe Bench Deployment - Railway Configuration
-# Version: 3.0
-# Optimized for Frappe 15.x + ERPNext
+# Version: 4.0
+# Optimized for Frappe Bench with verified repository structure
 
 ## Overview
 This repository contains a production-ready Frappe Bench deployment configured for Railway PaaS.
@@ -8,16 +8,31 @@ This repository contains a production-ready Frappe Bench deployment configured f
 ## Project Components
 - **Source Code**: apps/frappe, apps/erpnext, apps/foundry_erp
 - **Docker Configuration**: deployment/Dockerfile
-- **Railway Integration**: deployment/railway.json
-- **Application Startup**: deployment/start_app.sh
+- **Application Startup**: start_app.sh
 - **Documentation**: README.md, DEPLOYMENT_CHECKLIST.md
-- **Configuration**: config/, Procfile
+- **Configuration**: config/
 
 ## Project Features
 ✅ **Production Ready**
 ✅ **Railway Compatible**
 ✅ **Docker Optimized**
 ✅ **Clean Structure**
+
+## Repository Structure
+```
+Frappe-Bench-Dep-Landing/
+├── deployment/                           # Deployment configuration
+│   ├── Dockerfile                       # Production Dockerfile
+│   └── start_app.sh                    # Application startup script
+├── apps/                                # Application source code
+│   ├── frappe/                         # Frappe framework
+│   ├── erpnext/                        # ERPNext framework
+│   └── foundry_erp/                    # Custom Foundry ERP app
+├── config/                              # Configuration files
+├── README.md                            # Project documentation
+├── DEPLOYMENT_CHECKLIST.md              # Deployment checklist
+└── cleanup.sh                           # Maintenance script
+```
 
 ## Deployment Steps
 
@@ -34,22 +49,19 @@ This repository contains a production-ready Frappe Bench deployment configured f
 
 2. **Configure Project**
    - Build Command: `pip install --no-cache-dir --upgrade pip && pip install --no-cache-dir -e ./apps/frappe && npm ci --production`
-   - Start Command: `./deployment/start_app.sh`
+   - Start Command: `./start_app.sh`
    - Set Environment Variables: RAILWAY_ENVIRONMENT, PYTHONUNBUFFERED
 
 3. **Deploy**
-   - Run deployment and monitor for Procfile startup issues
+   - Run deployment and monitor for startup issues
 
 ## Key Files
 
 ### deployment/Dockerfile
-Production-ready Dockerfile for Railway deployment
+Production-ready Dockerfile optimized for Frappe Bench
 
-### deployment/railway.json
-Railway service configuration
-
-### deployment/start_app.sh
-Application startup script with Procfile validation
+### start_app.sh
+Application startup script with validation
 
 ### README.md
 Complete project documentation and setup guide
@@ -64,8 +76,8 @@ If Procfile is not found:
 ```bash
 # Check if Procfile was created properly
 ls -la Procfile
-# Ensure repository structure is correct
-find . -name "Procfile" -type f
+# Start the application
+./start_app.sh
 ```
 
 ### Build Issues
@@ -80,7 +92,6 @@ npm ci --production
 
 - **GitHub Repository**: AcumeltPvtLtd/saradata-erp-deploy
 - **Documentation**: README.md, DEPLOYMENT_CHECKLIST.md
-- **Configuration**: config/, Procfile
 
 ---
 
