@@ -1,5 +1,5 @@
 # Official Frappe Bench architecture for Railway
-# Version: 16.1.3
+# Version: 16.1.4
 # Rebuilt from the source-tree-only image into a real bench: frappe-bench CLI,
 # apps/ layout with editable installs, sites/apps.txt, production asset build,
 # and runtime bootstrapping (site creation / migration / app installs).
