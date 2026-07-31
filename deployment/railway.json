@@ -3,15 +3,15 @@
     "builderType": "PACK"
   },
   "deploy": {
-    "startCommand": "honcho start -f Procfile"
+    "startCommand": "bash /entrypoint.sh"
   },
   "services": [
     {
       "type": "web",
       "name": "frappe-bench",
       "nodeVersion": "20",
-      "buildCommand": "pip install --no-cache-dir -r requirements.txt && npm ci",
-      "startCommand": "honcho start -f Procfile",
+      "buildCommand": "echo 'using Dockerfile (PACK builder)'",
+      "startCommand": "bash /entrypoint.sh",
       "instanceCount": 1,
       "memory": "4GB",
       "cpu": 2,

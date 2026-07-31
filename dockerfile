@@ -1,20 +1,25 @@
-# Frappe Bench Production Dockerfile for Railway
-# Version: 15.0
-# RAILWAY-OPTIMIZED - Builds cleanly on python:3.12-slim (Debian trixie)
+# Official Frappe Bench architecture for Railway
+# Version: 16.1
+# Rebuilt from the source-tree-only image into a real bench: frappe-bench CLI,
+# apps/ layout with editable installs, sites/apps.txt, production asset build,
+# and runtime bootstrapping (site creation / migration / app installs).
+#
+# Runtime flow (deployment/entrypoint.sh):
+#   bench new-site -> bench install-app erpnext foundry_erp -> bench migrate
+#   -> gunicorn frappe.app:application on $PORT
 
 FROM python:3.12-slim
 
-# Install only system packages available in Debian trixie (python:3.12-slim)
+# ---- system dependencies (Debian trixie) ----
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
     curl \
-    gnupg \
-    git \
     wget \
+    git \
     unzip \
+    build-essential \
     nodejs \
     npm \
-    ca-certificates \
-    build-essential \
     libpango-1.0-0 \
     libpangoft2-1.0-0 \
     libpangocairo-1.0-0 \
@@ -25,57 +30,64 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     fonts-dejavu-core \
     && rm -rf /var/lib/apt/lists/*
 
-# Set working directory
-WORKDIR /app
+# yarn 1.x — frappe's frontend asset build
+RUN npm install --no-audit --no-fund --global yarn
 
-# Copy full app source trees (keeps repo layout; enables editable installs)
-COPY apps/frappe/ ./apps/frappe/
-COPY apps/erpnext/ ./apps/erpnext/
-COPY apps/foundry_erp/ ./apps/foundry_erp/
+# ---- bench user (official frappe_docker layout) ----
+RUN useradd -r -m -d /home/frappe -s /bin/bash frappe
 
-# Official Bench application layout: each app package is importable from the
-# apps directory (editable installs link to this source tree, not an isolated copy)
-ENV PYTHONPATH=/app/apps/frappe:/app/apps/erpnext
+WORKDIR /home/frappe/frappe-bench
 
-# Install Python dependencies (editable installs of each Frappe app, as bench does)
-RUN pip install --no-cache-dir --upgrade pip \
-    && pip install --no-cache-dir -e ./apps/frappe \
-    && pip install --no-cache-dir -e ./apps/erpnext \
-    && pip install --no-cache-dir honcho
+# ---- bench virtualenv + frappe-bench CLI ----
+RUN python -m venv env \
+    && env/bin/pip install --no-cache-dir --upgrade pip \
+    && env/bin/pip install --no-cache-dir "frappe-bench~=5.31"
 
-# Gate the build: verify the Frappe/ERPNext imports resolve to the app source
-RUN python -c "import frappe; import frappe.utils.typing_validations; import erpnext; print('Apps import OK: frappe', frappe.__version__, '| erpnext', erpnext.__version__)"
+# ---- app source trees (official bench apps/ layout) ----
+COPY apps/frappe ./apps/frappe
+COPY apps/erpnext ./apps/erpnext
+COPY apps/foundry_erp ./apps/foundry_erp
 
-# Copy configuration files
-COPY config/ ./config/
+# ---- install apps editable into the bench env (as `bench get-app` does) ----
+RUN env/bin/pip install --no-cache-dir \
+        -e ./apps/frappe \
+        -e ./apps/erpnext \
+        -e ./apps/foundry_erp \
+    && env/bin/python -c "import frappe; import frappe.utils.typing_validations; import erpnext; import foundry_erp; print('Apps import OK: frappe', frappe.__version__, '| erpnext', erpnext.__version__, '| foundry_erp', foundry_erp.__version__)"
 
-# Create necessary directories (bench layout: logs + sites for runtime)
-RUN mkdir -p logs sites
+# ---- bench metadata (apps.txt is the bench root marker + app list) ----
+RUN mkdir -p sites logs config config/pids
+COPY sites/apps.txt sites/apps.txt
+COPY config/ config/
 
-# Set up non-root user for security (password locked by default)
-RUN useradd -r -M -d /app -s /bin/sh appuser \
-    && chown -R appuser:appuser /app
+# ---- frontend dependencies + production asset build.
+#      Runs as the frappe user (bench refuses privileged commands when root
+#      unless a `frappe_user` is configured in common_site_config.json). ----
+RUN chown -R frappe:frappe /home/frappe/frappe-bench
 
-# Environment variables
+ENV HOME=/home/frappe
+ENV SITES_PATH=/home/frappe/frappe-bench/sites
 ENV PYTHONUNBUFFERED=1
-ENV PYTHONPATH=/app/apps/frappe:/app/apps/erpnext
-ENV PORT=8000
 ENV NODE_ENV=production
+ENV PORT=8000
+ENV PATH=/home/frappe/frappe-bench/env/bin:$PATH
+
+USER frappe
+
+RUN cd apps/frappe && yarn install --frozen-lockfile
+RUN cd apps/erpnext && yarn install --frozen-lockfile
+RUN FRAPPE_DOCKER_BUILD=1 bench build --apps frappe,erpnext,foundry_erp --production --verbose \
+    && test -d sites/assets/frappe/dist/js \
+    && echo "Assets built OK"
+
+# ---- entrypoint (bench bootstrap + serve) ----
+USER root
+COPY deployment/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh && chown frappe:frappe /entrypoint.sh
+
+USER frappe
+WORKDIR /home/frappe/frappe-bench
 
 EXPOSE 8000
 
-# Start script (PORT expands at runtime, not build time)
-RUN cat > /app/start.sh <<'EOS'
-#!/bin/sh
-set -e
-export PORT="${PORT:-8000}"
-exec gunicorn frappe.app:application --bind "0.0.0.0:${PORT}" --workers 2 --timeout 120
-EOS
-RUN chmod +x /app/start.sh
-
-# Create Procfile for Honcho (process manager)
-RUN printf 'web: /app/start.sh\n' > Procfile
-
-USER appuser
-
-CMD ["honcho", "start", "-f", "Procfile"]
+CMD ["/entrypoint.sh"]

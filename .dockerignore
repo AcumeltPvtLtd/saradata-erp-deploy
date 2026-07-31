@@ -12,7 +12,8 @@ node_modules/
 **/node_modules/
 
 # Frappe runtime data
-sites/
+sites/assets/
+sites/*/
 logs/
 *.log
 
@@ -21,3 +22,6 @@ archived/
 dist-packages/
 .env
 .env.*
+
+# Stray redis dump committed inside foundry_erp
+apps/foundry_erp/dump.rdb
