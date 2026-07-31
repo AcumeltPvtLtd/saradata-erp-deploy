@@ -56,8 +56,6 @@ dist/
 # OS specific
 OS-specific*
 tmp_*
-*_V*
-*_S*
 
 # Configuration and cache
 config/pids/*
@@ -101,4 +99,3 @@ tmp_check.sql
 # Ignore benchmark and profiling files
 benchmark*
 profiles/
-*profile*

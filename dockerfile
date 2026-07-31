@@ -1,5 +1,5 @@
 # Frappe Bench Production Dockerfile for Railway
-# Version: 14.0
+# Version: 15.0
 # RAILWAY-OPTIMIZED - Builds cleanly on python:3.12-slim (Debian trixie)
 
 FROM python:3.12-slim
@@ -33,17 +33,24 @@ COPY apps/frappe/ ./apps/frappe/
 COPY apps/erpnext/ ./apps/erpnext/
 COPY apps/foundry_erp/ ./apps/foundry_erp/
 
-# Install Python dependencies (editable installs of each Frappe app)
+# Official Bench application layout: each app package is importable from the
+# apps directory (editable installs link to this source tree, not an isolated copy)
+ENV PYTHONPATH=/app/apps/frappe:/app/apps/erpnext
+
+# Install Python dependencies (editable installs of each Frappe app, as bench does)
 RUN pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir -e ./apps/frappe \
     && pip install --no-cache-dir -e ./apps/erpnext \
     && pip install --no-cache-dir honcho
 
+# Gate the build: verify the Frappe/ERPNext imports resolve to the app source
+RUN python -c "import frappe; import frappe.utils.typing_validations; import erpnext; print('Apps import OK: frappe', frappe.__version__, '| erpnext', erpnext.__version__)"
+
 # Copy configuration files
 COPY config/ ./config/
 
-# Create necessary directories
-RUN mkdir -p logs
+# Create necessary directories (bench layout: logs + sites for runtime)
+RUN mkdir -p logs sites
 
 # Set up non-root user for security (password locked by default)
 RUN useradd -r -M -d /app -s /bin/sh appuser \
@@ -51,7 +58,7 @@ RUN useradd -r -M -d /app -s /bin/sh appuser \
 
 # Environment variables
 ENV PYTHONUNBUFFERED=1
-ENV PYTHONPATH=/app
+ENV PYTHONPATH=/app/apps/frappe:/app/apps/erpnext
 ENV PORT=8000
 ENV NODE_ENV=production
 
