@@ -57,7 +57,7 @@ RUN env/bin/pip install --no-cache-dir \
 
 # ---- bench metadata (apps.txt is the bench root marker + app list) ----
 RUN mkdir -p sites logs config config/pids
-COPY sites/apps.txt sites/apps.txt
+COPY deployment/apps.txt sites/apps.txt
 COPY config/ config/
 
 # ---- frontend dependencies + production asset build.
