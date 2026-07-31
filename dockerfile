@@ -1,5 +1,5 @@
 # Official Frappe Bench architecture for Railway
-# Version: 16.1.2
+# Version: 16.1.3
 # Rebuilt from the source-tree-only image into a real bench: frappe-bench CLI,
 # apps/ layout with editable installs, sites/apps.txt, production asset build,
 # and runtime bootstrapping (site creation / migration / app installs).
@@ -40,6 +40,16 @@ RUN npm install --no-audit --no-fund --global yarn
 
 # ---- bench user (official frappe_docker layout) ----
 RUN useradd -r -m -d /home/frappe -s /bin/bash frappe
+
+# Railway's MySQL serves a self-signed TLS certificate. The mariadb/mysql CLI
+# (invoked by frappe's DbManager.restore_database during `bench new-site`)
+# must connect without verifying it. PyMySQL is unaffected (SSL only when
+# db_ssl_ca is configured).
+RUN mkdir -p /etc/mysql/conf.d \
+    && printf '[client]\nssl=0\nssl-verify-server-cert=0\n' > /etc/mysql/conf.d/railway.cnf \
+    && printf '[client]\nssl=0\nssl-verify-server-cert=0\n' > /home/frappe/.my.cnf \
+    && chown frappe:frappe /home/frappe/.my.cnf \
+    && chmod 600 /home/frappe/.my.cnf
 
 WORKDIR /home/frappe/frappe-bench
 

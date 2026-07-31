@@ -14,6 +14,12 @@ cd "$BENCH_ROOT"
 # bench CLI requires apps/ sites/ config/ logs/ config/pids at the bench root
 mkdir -p sites logs config config/pids
 
+# MySQL/MariaDB client: never verify Railway's self-signed TLS certificate
+# (frappe shells out to the mariadb CLI during `bench new-site` schema restore).
+mkdir -p "$HOME"
+printf '[client]\nssl=0\nssl-verify-server-cert=0\n' > "$HOME/.my.cnf"
+chmod 600 "$HOME/.my.cnf"
+
 log() { echo "[entrypoint] $(date -u +%FT%TZ) $*"; }
 
 # ---- resolve configuration from Railway environment ----
