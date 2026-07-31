@@ -1,5 +1,5 @@
 # Official Frappe Bench architecture for Railway
-# Version: 16.1
+# Version: 16.1.2
 # Rebuilt from the source-tree-only image into a real bench: frappe-bench CLI,
 # apps/ layout with editable installs, sites/apps.txt, production asset build,
 # and runtime bootstrapping (site creation / migration / app installs).
@@ -20,6 +20,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     nodejs \
     npm \
+    mariadb-client \
     libpango-1.0-0 \
     libpangoft2-1.0-0 \
     libpangocairo-1.0-0 \
@@ -29,6 +30,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     shared-mime-info \
     fonts-dejavu-core \
     && rm -rf /var/lib/apt/lists/*
+
+# Frappe restores the database schema with the mariadb client CLI
+# (get_command() in frappe/database: `which("mariadb") or which("mysql")`)
+RUN which mariadb && mariadb --version
 
 # yarn 1.x — frappe's frontend asset build
 RUN npm install --no-audit --no-fund --global yarn
