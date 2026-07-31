@@ -1,0 +1,23 @@
+# Git metadata
+.git/
+**/.git/
+
+# Python
+__pycache__/
+*.py[cod]
+**/__pycache__/
+
+# Node
+node_modules/
+**/node_modules/
+
+# Frappe runtime data
+sites/
+logs/
+*.log
+
+# Bench artifacts
+archived/
+dist-packages/
+.env
+.env.*
