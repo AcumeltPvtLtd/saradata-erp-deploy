@@ -1,5 +1,5 @@
 # Frappe Bench Production Dockerfile for Railway
-# Version: 11.0
+# Version: 13.0
 # RAILWAY-OPTIMIZED - Builds cleanly on python:3.12-slim (Debian trixie)
 
 FROM python:3.12-slim
@@ -14,6 +14,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     nodejs \
     npm \
     ca-certificates \
+    build-essential \
+    libpango-1.0-0 \
+    libpangoft2-1.0-0 \
+    libpangocairo-1.0-0 \
+    libcairo2 \
+    libgdk-pixbuf-2.0-0 \
+    libffi8 \
+    shared-mime-info \
+    fonts-dejavu-core \
     && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
