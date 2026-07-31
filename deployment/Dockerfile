@@ -1,5 +1,5 @@
 # Frappe Bench Production Dockerfile for Railway
-# Version: 13.0
+# Version: 14.0
 # RAILWAY-OPTIMIZED - Builds cleanly on python:3.12-slim (Debian trixie)
 
 FROM python:3.12-slim
@@ -45,8 +45,8 @@ COPY config/ ./config/
 # Create necessary directories
 RUN mkdir -p logs
 
-# Set up non-root user for security
-RUN useradd --disabled-password --gecos '' appuser \
+# Set up non-root user for security (password locked by default)
+RUN useradd -r -M -d /app -s /bin/sh appuser \
     && chown -R appuser:appuser /app
 
 # Environment variables
